@@ -13,7 +13,7 @@ class PowerMonitor {
             voltages: { Ua: [], Ub: [], Uc: [] },
             currents: { Ia: [], Ib: [], Ic: [], In: [] },
             powers: { Pa: [], Pb: [], Pc: [], Total: [] }
-            reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] } // Add this line
+           // reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] } // Add this line
         };
         
         this.charts = {};
@@ -322,6 +322,8 @@ class PowerMonitor {
             Object.values(this.chartData.voltages).forEach(arr => arr.shift());
             Object.values(this.chartData.currents).forEach(arr => arr.shift());
             Object.values(this.chartData.powers).forEach(arr => arr.shift());
+            // Add this for reactive power charts if needed later
+            //Object.values(this.chartData.reactivePowers).forEach(arr => arr.shift());
         }
 
         // Add new data
@@ -345,11 +347,11 @@ class PowerMonitor {
         this.chartData.powers.Total.push(pd.activePower.Total);
 
         // Reactive Powers (for future charts)
-        this.chartData.reactivePowers = this.chartData.reactivePowers || { Qa: [], Qb: [], Qc: [], Total: [] };
-        this.chartData.reactivePowers.Qa.push(pd.reactivePower.Qa);
-        this.chartData.reactivePowers.Qb.push(pd.reactivePower.Qb);
-        this.chartData.reactivePowers.Qc.push(pd.reactivePower.Qc);
-        this.chartData.reactivePowers.Total.push(pd.reactivePower.Total);
+        // this.chartData.reactivePowers = this.chartData.reactivePowers || { Qa: [], Qb: [], Qc: [], Total: [] };
+        // this.chartData.reactivePowers.Qa.push(pd.reactivePower.Qa);
+        // this.chartData.reactivePowers.Qb.push(pd.reactivePower.Qb);
+        // this.chartData.reactivePowers.Qc.push(pd.reactivePower.Qc);
+        // this.chartData.reactivePowers.Total.push(pd.reactivePower.Total);
     }
 
     updateCharts() {

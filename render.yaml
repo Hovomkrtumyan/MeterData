@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: power-monitor
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGODB_URI
+        value: your_mongodb_atlas_connection_string

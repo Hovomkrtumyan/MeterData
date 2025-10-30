@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Monitoring System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-bolt"></i> Power Monitoring System</h1>
+            <div class="status-bar">
+                <span id="lastUpdate">Last update: Never</span>
+                <span id="connectionStatus" class="status-offline">Offline</span>
+            </div>
+        </header>
+
+        <div class="dashboard">
+            <!-- Voltage Section -->
+            <div class="voltage-section">
+                <h2><i class="fas fa-bolt"></i> Voltage Measurements</h2>
+                <div class="voltage-cards">
+                    <div class="card voltage-card">
+                        <h3 class="voltage-title phase-voltages">Phase Voltages</h3>
+                        <div class="voltage-params">
+                            <div class="param">
+                                <label>Ua (A-N):</label>
+                                <span id="voltageUa">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Ub (B-N):</label>
+                                <span id="voltageUb">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Uc (C-N):</label>
+                                <span id="voltageUc">0.00 V</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card voltage-card">
+                        <h3 class="voltage-title line-voltages">Line Voltages</h3>
+                        <div class="voltage-params">
+                            <div class="param">
+                                <label>Uab (A-B):</label>
+                                <span id="voltageUab">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Ubc (B-C):</label>
+                                <span id="voltageUbc">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Uca (C-A):</label>
+                                <span id="voltageUca">0.00 V</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="card summary-card">
+                    <h3><i class="fas fa-tachometer-alt"></i> Total Power</h3>
+                    <div class="value" id="totalPower">0.00 kW</div>
+                </div>
+                <div class="card summary-card">
+                    <h3><i class="fas fa-wave-square"></i> Frequency</h3>
+                    <div class="value" id="frequency">0.00 Hz</div>
+                </div>
+                <div class="card summary-card">
+                    <h3><i class="fas fa-plug"></i> Power Factor</h3>
+                    <div class="value" id="powerFactor">0.00</div>
+                </div>
+                <div class="card summary-card">
+                    <h3><i class="fas fa-battery-half"></i> Energy Import</h3>
+                    <div class="value" id="energyImport">0.00 kWh</div>
+                </div>
+            </div>
+
+            <!-- Three Phase Data -->
+            <div class="phase-section">
+                <h2><i class="fas fa-sliders-h"></i> Three Phase Parameters</h2>
+                <div class="phase-cards">
+                    <!-- Phase A -->
+                    <div class="card phase-card">
+                        <h3 class="phase-title phase-a">Phase A</h3>
+                        <div class="phase-params">
+                            <div class="param">
+                                <label>Voltage:</label>
+                                <span id="voltageA">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Current:</label>
+                                <span id="currentA">0.00 A</span>
+                            </div>
+                            <div class="param">
+                                <label>Active Power:</label>
+                                <span id="powerA">0.00 kW</span>
+                            </div>
+                            <div class="param">
+                                <label>Power Factor:</label>
+                                <span id="pfA">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase B -->
+                    <div class="card phase-card">
+                        <h3 class="phase-title phase-b">Phase B</h3>
+                        <div class="phase-params">
+                            <div class="param">
+                                <label>Voltage:</label>
+                                <span id="voltageB">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Current:</label>
+                                <span id="currentB">0.00 A</span>
+                            </div>
+                            <div class="param">
+                                <label>Active Power:</label>
+                                <span id="powerB">0.00 kW</span>
+                            </div>
+                            <div class="param">
+                                <label>Power Factor:</label>
+                                <span id="pfB">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phase C -->
+                    <div class="card phase-card">
+                        <h3 class="phase-title phase-c">Phase C</h3>
+                        <div class="phase-params">
+                            <div class="param">
+                                <label>Voltage:</label>
+                                <span id="voltageC">0.00 V</span>
+                            </div>
+                            <div class="param">
+                                <label>Current:</label>
+                                <span id="currentC">0.00 A</span>
+                            </div>
+                            <div class="param">
+                                <label>Active Power:</label>
+                                <span id="powerC">0.00 kW</span>
+                            </div>
+                            <div class="param">
+                                <label>Power Factor:</label>
+                                <span id="pfC">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

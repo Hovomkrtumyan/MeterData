@@ -7,4 +7,4 @@ services:
     startCommand: npm start
     envVars:
       - key: MONGODB_URI
-        value: mongodb+srv://hovomkrt_db_user:<MHA1989Hovo>@cluster0.0g0rrzs.mongodb.net/?appName=Cluster0
+        value: mongodb+srv://hovomkrt_db_user:MHA1989Hovo@cluster0.0g0rrzs.mongodb.net/?appName=Cluster0

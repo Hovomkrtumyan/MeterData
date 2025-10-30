@@ -13,6 +13,7 @@ class PowerMonitor {
             voltages: { Ua: [], Ub: [], Uc: [] },
             currents: { Ia: [], Ib: [], Ic: [], In: [] },
             powers: { Pa: [], Pb: [], Pc: [], Total: [] }
+            reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] } // Add this line
         };
         
         this.charts = {};
@@ -281,6 +282,28 @@ class PowerMonitor {
         this.updateElement('pfB', pd.powerFactor.PFb.toFixed(3));
         this.updateElement('pfC', pd.powerFactor.PFc.toFixed(3));
 
+        // UPDATE: Add power analysis data
+        this.updateElement('activePowerA', pd.activePower.Pa.toFixed(3));
+        this.updateElement('activePowerB', pd.activePower.Pb.toFixed(3));
+        this.updateElement('activePowerC', pd.activePower.Pc.toFixed(3));
+        this.updateElement('activePowerTotal', pd.activePower.Total.toFixed(3));
+
+        this.updateElement('reactivePowerA', pd.reactivePower.Qa.toFixed(3));
+        this.updateElement('reactivePowerB', pd.reactivePower.Qb.toFixed(3));
+        this.updateElement('reactivePowerC', pd.reactivePower.Qc.toFixed(3));
+        this.updateElement('reactivePowerTotal', pd.reactivePower.Total.toFixed(3));
+
+        this.updateElement('apparentPowerA', pd.apparentPower.Sa.toFixed(3));
+        this.updateElement('apparentPowerB', pd.apparentPower.Sb.toFixed(3));
+        this.updateElement('apparentPowerC', pd.apparentPower.Sc.toFixed(3));
+        this.updateElement('apparentPowerTotal', pd.apparentPower.Total.toFixed(3));
+
+        this.updateElement('powerFactorA', pd.powerFactor.PFa.toFixed(3));
+        this.updateElement('powerFactorB', pd.powerFactor.PFb.toFixed(3));
+        this.updateElement('powerFactorC', pd.powerFactor.PFc.toFixed(3));
+        this.updateElement('powerFactorTotal', pd.powerFactor.Total.toFixed(3));
+
+
         // Update timestamp
         const now = new Date();
         this.updateElement('lastUpdate', `Last update: ${now.toLocaleTimeString()}`);
@@ -320,6 +343,13 @@ class PowerMonitor {
         this.chartData.powers.Pb.push(pd.activePower.Pb);
         this.chartData.powers.Pc.push(pd.activePower.Pc);
         this.chartData.powers.Total.push(pd.activePower.Total);
+
+        // Reactive Powers (for future charts)
+        this.chartData.reactivePowers = this.chartData.reactivePowers || { Qa: [], Qb: [], Qc: [], Total: [] };
+        this.chartData.reactivePowers.Qa.push(pd.reactivePower.Qa);
+        this.chartData.reactivePowers.Qb.push(pd.reactivePower.Qb);
+        this.chartData.reactivePowers.Qc.push(pd.reactivePower.Qc);
+        this.chartData.reactivePowers.Total.push(pd.reactivePower.Total);
     }
 
     updateCharts() {

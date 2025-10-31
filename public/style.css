@@ -778,3 +778,88 @@ body {
         font-size: 0.9rem;
     }
 }
+
+
+/* Header Layout */
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.header-main h1 {
+    margin: 0;
+}
+
+/* Device Selector */
+.device-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(52, 152, 219, 0.1);
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.device-selector label {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.device-selector label i {
+    color: #3498db;
+    margin-right: 5px;
+}
+
+.device-selector select {
+    padding: 8px 12px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    background: white;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    min-width: 150px;
+}
+
+.device-selector select:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.refresh-btn {
+    background: #3498db;
+    border: none;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.refresh-btn:hover {
+    background: #2980b9;
+    transform: rotate(90deg);
+}
+
+.refresh-btn:active {
+    transform: rotate(180deg);
+}
+
+/* Responsive header */
+@media (max-width: 768px) {
+    .header-main {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+    
+    .device-selector {
+        justify-content: center;
+    }
+}

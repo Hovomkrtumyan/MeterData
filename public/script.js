@@ -6,6 +6,8 @@ class PowerMonitor {
         this.alarmSettings = {};
         this.activeAlarms = new Set();
         this.isAlarmMuted = false;
+        this.availableDevices = ["ESP32_01"];
+        this.currentDevice = "ESP32_01";
         
         // Chart data history (keep last 20 points)
         this.chartData = {
@@ -25,12 +27,10 @@ class PowerMonitor {
         this.loadAlarmSettings();
         this.initializeCharts();
         this.setupEventListeners();
+        this.loadAvailableDevices();
         this.loadLatestData();
         
-        // Update data every 2 seconds
         setInterval(() => this.loadLatestData(), this.updateInterval);
-        
-        // Update charts every 5 seconds (smoother)
         setInterval(() => this.updateCharts(), 5000);
     }
 
@@ -41,6 +41,91 @@ class PowerMonitor {
             this.stopAlarmSound();
             this.updateAlarmBanner();
         });
+        
+        // Device selector change event
+        document.getElementById('deviceSelect').addEventListener('change', (event) => {
+            this.currentDevice = event.target.value;
+            this.resetChartData();
+            this.loadLatestData();
+            this.updateDeviceDisplay();
+        });
+        
+        // Refresh devices button
+        document.getElementById('refreshDevices').addEventListener('click', () => {
+            this.loadAvailableDevices();
+        });
+    }
+
+    async loadAvailableDevices() {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/devices`);
+            if (!response.ok) throw new Error('Failed to fetch devices');
+            
+            const devices = await response.json();
+            this.availableDevices = devices.length > 0 ? devices : ["ESP32_01"];
+            this.populateDeviceSelector();
+            
+        } catch (error) {
+            console.error('Error loading devices:', error);
+            this.availableDevices = ["ESP32_01"];
+            this.populateDeviceSelector();
+        }
+    }
+
+    populateDeviceSelector() {
+        const deviceSelect = document.getElementById('deviceSelect');
+        deviceSelect.innerHTML = '';
+        
+        this.availableDevices.forEach(device => {
+            const option = document.createElement('option');
+            option.value = device;
+            option.textContent = device;
+            option.selected = device === this.currentDevice;
+            deviceSelect.appendChild(option);
+        });
+        
+        // If no devices available, show default
+        if (this.availableDevices.length === 0) {
+            const option = document.createElement('option');
+            option.value = "ESP32_01";
+            option.textContent = "ESP32_01";
+            deviceSelect.appendChild(option);
+        }
+    }
+
+    updateDeviceDisplay() {
+        // Update any device-specific displays if needed
+        console.log(`Switched to device: ${this.currentDevice}`);
+    }
+
+    resetChartData() {
+        // Reset all chart data when switching devices
+        this.chartData = {
+            timestamps: [],
+            voltages: { Ua: [], Ub: [], Uc: [] },
+            currents: { Ia: [], Ib: [], Ic: [], In: [] },
+            powers: { Pa: [], Pb: [], Pc: [], Total: [] },
+            reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] }
+        };
+        
+        // Reset charts visually
+        if (this.charts.voltage) {
+            this.charts.voltage.data.labels = [];
+            this.charts.voltage.data.datasets.forEach(dataset => dataset.data = []);
+            this.charts.voltage.update('none');
+        }
+        
+        if (this.charts.current) {
+            this.charts.current.data.labels = [];
+            this.charts.current.data.datasets.forEach(dataset => dataset.data = []);
+            this.charts.current.update('none');
+        }
+        
+        if (this.charts.power) {
+            this.charts.power.data.labels = [];
+            this.charts.power.data.datasets.forEach(dataset => dataset.data = []);
+            this.charts.power.update('none');
+        }
     }
 
     loadAlarmSettings() {
@@ -297,7 +382,7 @@ class PowerMonitor {
 
     async loadLatestData() {
         try {
-            const response = await fetch(`${this.baseUrl}/api/data/latest`);
+            const response = await fetch(`${this.baseUrl}/api/data/latest?device=${encodeURIComponent(this.currentDevice)}`);
             if (!response.ok) throw new Error('Failed to fetch data');
             
             const data = await response.json();
@@ -375,7 +460,7 @@ class PowerMonitor {
 
         // Update timestamp
         const now = new Date();
-        this.updateElement('lastUpdate', `Last update: ${now.toLocaleTimeString()}`);
+        this.updateElement('lastUpdate', `Last update: ${now.toLocaleTimeString()} (${this.currentDevice})`);
     }
 
     updateChartData(data) {
@@ -584,7 +669,20 @@ function showPage(pageId) {
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.remove('active');
     });
-    event.currentTarget.classList.add('active');
+    
+    // Find and activate the correct nav button
+    const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(btn => {
+        return btn.getAttribute('onclick')?.includes(pageId);
+    });
+    
+    if (activeBtn) {
+        activeBtn.classList.add('active');
+    }
+    
+    // If switching to dashboard, refresh data immediately
+    if (pageId === 'dashboard' && window.powerMonitor) {
+        window.powerMonitor.loadLatestData();
+    }
 }
 
 function saveSettings() {
@@ -596,52 +694,53 @@ function saveSettings() {
     
     // Voltage settings
     settings.voltageUa = {
-        min: parseFloat(document.getElementById('min_voltageUa').value),
-        max: parseFloat(document.getElementById('max_voltageUa').value)
+        min: parseFloat(document.getElementById('min_voltageUa').value) || 200,
+        max: parseFloat(document.getElementById('max_voltageUa').value) || 250
     };
     settings.voltageUb = {
-        min: parseFloat(document.getElementById('min_voltageUb').value),
-        max: parseFloat(document.getElementById('max_voltageUb').value)
+        min: parseFloat(document.getElementById('min_voltageUb').value) || 200,
+        max: parseFloat(document.getElementById('max_voltageUb').value) || 250
     };
     settings.voltageUc = {
-        min: parseFloat(document.getElementById('min_voltageUc').value),
-        max: parseFloat(document.getElementById('max_voltageUc').value)
+        min: parseFloat(document.getElementById('min_voltageUc').value) || 200,
+        max: parseFloat(document.getElementById('max_voltageUc').value) || 250
     };
     settings.voltageUab = {
-        min: parseFloat(document.getElementById('min_voltageUab').value),
-        max: parseFloat(document.getElementById('max_voltageUab').value)
+        min: parseFloat(document.getElementById('min_voltageUab').value) || 350,
+        max: parseFloat(document.getElementById('max_voltageUab').value) || 450
     };
     settings.voltageUbc = {
-        min: parseFloat(document.getElementById('min_voltageUbc').value),
-        max: parseFloat(document.getElementById('max_voltageUbc').value)
+        min: parseFloat(document.getElementById('min_voltageUbc').value) || 350,
+        max: parseFloat(document.getElementById('max_voltageUbc').value) || 450
     };
     settings.voltageUca = {
-        min: parseFloat(document.getElementById('min_voltageUca').value),
-        max: parseFloat(document.getElementById('max_voltageUca').value)
+        min: parseFloat(document.getElementById('min_voltageUca').value) || 350,
+        max: parseFloat(document.getElementById('max_voltageUca').value) || 450
     };
 
     // Current settings
-    settings.currentIa = { max: parseFloat(document.getElementById('max_currentIa').value) };
-    settings.currentIb = { max: parseFloat(document.getElementById('max_currentIb').value) };
-    settings.currentIc = { max: parseFloat(document.getElementById('max_currentIc').value) };
-    settings.currentIn = { max: parseFloat(document.getElementById('max_currentIn').value) };
+    settings.currentIa = { max: parseFloat(document.getElementById('max_currentIa').value) || 100 };
+    settings.currentIb = { max: parseFloat(document.getElementById('max_currentIb').value) || 100 };
+    settings.currentIc = { max: parseFloat(document.getElementById('max_currentIc').value) || 100 };
+    settings.currentIn = { max: parseFloat(document.getElementById('max_currentIn').value) || 50 };
 
     // Power settings
-    settings.activePowerA = { max: parseFloat(document.getElementById('max_activePowerA').value) };
-    settings.activePowerB = { max: parseFloat(document.getElementById('max_activePowerB').value) };
-    settings.activePowerC = { max: parseFloat(document.getElementById('max_activePowerC').value) };
-    settings.activePowerTotal = { max: parseFloat(document.getElementById('max_activePowerTotal').value) };
+    settings.activePowerA = { max: parseFloat(document.getElementById('max_activePowerA').value) || 50 };
+    settings.activePowerB = { max: parseFloat(document.getElementById('max_activePowerB').value) || 50 };
+    settings.activePowerC = { max: parseFloat(document.getElementById('max_activePowerC').value) || 50 };
+    settings.activePowerTotal = { max: parseFloat(document.getElementById('max_activePowerTotal').value) || 150 };
 
     // Power factor settings
-    settings.powerFactorA = { min: parseFloat(document.getElementById('min_powerFactorA').value) };
-    settings.powerFactorB = { min: parseFloat(document.getElementById('min_powerFactorB').value) };
-    settings.powerFactorC = { min: parseFloat(document.getElementById('min_powerFactorC').value) };
-    settings.powerFactorTotal = { min: parseFloat(document.getElementById('min_powerFactorTotal').value) };
+    settings.powerFactorA = { min: parseFloat(document.getElementById('min_powerFactorA').value) || 0.8 };
+    settings.powerFactorB = { min: parseFloat(document.getElementById('min_powerFactorB').value) || 0.8 };
+    settings.powerFactorC = { min: parseFloat(document.getElementById('min_powerFactorC').value) || 0.8 };
+    settings.powerFactorTotal = { min: parseFloat(document.getElementById('min_powerFactorTotal').value) || 0.8 };
 
     // Update and save
     monitor.alarmSettings = settings;
     monitor.saveAlarmSettings();
     
+    // Show success message and return to dashboard
     alert('Settings saved successfully!');
     showPage('dashboard');
 }
@@ -660,4 +759,7 @@ function resetSettings() {
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
     window.powerMonitor = new PowerMonitor();
+    
+    // Initialize navigation - make sure dashboard is active
+    showPage('dashboard');
 });

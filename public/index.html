@@ -30,7 +30,18 @@
         <!-- Dashboard Page -->
         <div id="dashboard" class="page active">
             <header class="header">
-                <h1><i class="fas fa-bolt"></i> Power Monitoring System</h1>
+                <div class="header-main">
+                    <h1><i class="fas fa-bolt"></i> Power Monitoring System</h1>
+                    <div class="device-selector">
+                        <label for="deviceSelect"><i class="fas fa-microchip"></i> Select Device:</label>
+                        <select id="deviceSelect">
+                            <option value="ESP32_01">ESP32_01</option>
+                        </select>
+                        <button id="refreshDevices" class="refresh-btn" title="Refresh Devices">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
                 <div class="status-bar">
                     <span id="lastUpdate">Last update: Never</span>
                     <span id="connectionStatus" class="status-offline">Offline</span>

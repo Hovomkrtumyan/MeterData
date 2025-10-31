@@ -82,11 +82,13 @@ app.post('/api/data', async (req, res) => {
 
 app.get('/api/data/latest', async (req, res) => {
     try {
-        const latestData = await PowerData.findOne().sort({ timestamp: -1 });
+        const deviceId = req.query.device || "ESP32_01";
+        
+        const latestData = await PowerData.findOne({ Device_ID: deviceId }).sort({ timestamp: -1 });
         
         if (!latestData) {
             return res.json({
-                Device_ID: "ESP32_01",
+                Device_ID: deviceId,
                 powerData: {
                     voltages: { Ua: 0, Ub: 0, Uc: 0, Uab: 0, Ubc: 0, Uca: 0 },
                     currents: { Ia: 0, Ib: 0, Ic: 0, In: 0 },
@@ -109,8 +111,10 @@ app.get('/api/data/latest', async (req, res) => {
 
 app.get('/api/data/history', async (req, res) => {
     try {
+        const deviceId = req.query.device || "ESP32_01";
         const limit = parseInt(req.query.limit) || 100;
-        const history = await PowerData.find()
+        
+        const history = await PowerData.find({ Device_ID: deviceId })
             .sort({ timestamp: -1 })
             .limit(limit);
         
@@ -121,6 +125,7 @@ app.get('/api/data/history', async (req, res) => {
     }
 });
 
+// NEW: Get all available devices
 app.get('/api/devices', async (req, res) => {
     try {
         const devices = await PowerData.distinct('Device_ID');

@@ -6,14 +6,17 @@ class PowerMonitor {
         this.baseUrl = window.location.origin;
         this.currentData = null;
         this.updateInterval = 2000;
+        this.alarmSettings = {};
+        this.activeAlarms = new Set();
+        this.isAlarmMuted = false;
         
-        // Chart data history (keep last 20 points)
+        // Chart data history
         this.chartData = {
             timestamps: [],
             voltages: { Ua: [], Ub: [], Uc: [] },
             currents: { Ia: [], Ib: [], Ic: [], In: [] },
-            powers: { Pa: [], Pb: [], Pc: [], Total: [] }
-           // reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] } // Add this line
+            powers: { Pa: [], Pb: [], Pc: [], Total: [] },
+            reactivePowers: { Qa: [], Qb: [], Qc: [], Total: [] }
         };
         
         this.charts = {};
@@ -22,15 +25,186 @@ class PowerMonitor {
 
     init() {
         console.log("Power Monitor initialized");
+        this.loadAlarmSettings();
         this.initializeCharts();
+        this.setupEventListeners();
         this.loadLatestData();
         
-        // Update data every 2 seconds
         setInterval(() => this.loadLatestData(), this.updateInterval);
-        
-        // Update charts every 5 seconds (smoother)
         setInterval(() => this.updateCharts(), 5000);
     }
+
+     setupEventListeners() {
+        // Mute alarm button
+        document.getElementById('muteAlarm').addEventListener('click', () => {
+            this.isAlarmMuted = true;
+            this.stopAlarmSound();
+            this.updateAlarmBanner();
+        });
+    }
+
+    loadAlarmSettings() {
+        const saved = localStorage.getItem('powerMonitorAlarmSettings');
+        if (saved) {
+            this.alarmSettings = JSON.parse(saved);
+            this.populateSettingsForm();
+        } else {
+            this.setDefaultAlarmSettings();
+        }
+    }
+
+    setDefaultAlarmSettings() {
+        this.alarmSettings = {
+            // Voltage limits
+            voltageUa: { min: 200, max: 250 },
+            voltageUb: { min: 200, max: 250 },
+            voltageUc: { min: 200, max: 250 },
+            voltageUab: { min: 350, max: 450 },
+            voltageUbc: { min: 350, max: 450 },
+            voltageUca: { min: 350, max: 450 },
+            
+            // Current limits (only max)
+            currentIa: { max: 100 },
+            currentIb: { max: 100 },
+            currentIc: { max: 100 },
+            currentIn: { max: 50 },
+            
+            // Power limits
+            activePowerA: { max: 50 },
+            activePowerB: { max: 50 },
+            activePowerC: { max: 50 },
+            activePowerTotal: { max: 150 },
+            
+            // Power factor limits (only min)
+            powerFactorA: { min: 0.8 },
+            powerFactorB: { min: 0.8 },
+            powerFactorC: { min: 0.8 },
+            powerFactorTotal: { min: 0.8 }
+        };
+        this.saveAlarmSettings();
+    }
+
+    saveAlarmSettings() {
+        localStorage.setItem('powerMonitorAlarmSettings', JSON.stringify(this.alarmSettings));
+    }
+
+    populateSettingsForm() {
+        for (const [param, limits] of Object.entries(this.alarmSettings)) {
+            if (limits.min !== undefined) {
+                const minInput = document.getElementById(`min_${param}`);
+                if (minInput) minInput.value = limits.min;
+            }
+            if (limits.max !== undefined) {
+                const maxInput = document.getElementById(`max_${param}`);
+                if (maxInput) maxInput.value = limits.max;
+            }
+        }
+    }
+
+    checkAlarms(data) {
+        if (!data || !data.powerData) return;
+
+        const pd = data.powerData;
+        this.activeAlarms.clear();
+
+        // Check voltage alarms
+        this.checkParameterAlarm('voltageUa', pd.voltages.Ua);
+        this.checkParameterAlarm('voltageUb', pd.voltages.Ub);
+        this.checkParameterAlarm('voltageUc', pd.voltages.Uc);
+        this.checkParameterAlarm('voltageUab', pd.voltages.Uab);
+        this.checkParameterAlarm('voltageUbc', pd.voltages.Ubc);
+        this.checkParameterAlarm('voltageUca', pd.voltages.Uca);
+
+        // Check current alarms
+        this.checkParameterAlarm('currentIa', pd.currents.Ia);
+        this.checkParameterAlarm('currentIb', pd.currents.Ib);
+        this.checkParameterAlarm('currentIc', pd.currents.Ic);
+        this.checkParameterAlarm('currentIn', pd.currents.In);
+
+        // Check power alarms
+        this.checkParameterAlarm('activePowerA', pd.activePower.Pa);
+        this.checkParameterAlarm('activePowerB', pd.activePower.Pb);
+        this.checkParameterAlarm('activePowerC', pd.activePower.Pc);
+        this.checkParameterAlarm('activePowerTotal', pd.activePower.Total);
+
+        // Check power factor alarms
+        this.checkParameterAlarm('powerFactorA', pd.powerFactor.PFa);
+        this.checkParameterAlarm('powerFactorB', pd.powerFactor.PFb);
+        this.checkParameterAlarm('powerFactorC', pd.powerFactor.PFc);
+        this.checkParameterAlarm('powerFactorTotal', pd.powerFactor.Total);
+
+        this.updateAlarmDisplay();
+    }
+
+    checkParameterAlarm(parameter, value) {
+        const limits = this.alarmSettings[parameter];
+        if (!limits) return;
+
+        let isAlarm = false;
+        
+        if (limits.min !== undefined && value < limits.min) {
+            isAlarm = true;
+        }
+        if (limits.max !== undefined && value > limits.max) {
+            isAlarm = true;
+        }
+
+        // Update LED
+        const led = document.getElementById(`led_${parameter}`);
+        if (led) {
+            if (isAlarm) {
+                led.className = 'led alarm';
+                this.activeAlarms.add(parameter);
+            } else {
+                led.className = 'led normal';
+            }
+        }
+    }
+
+    updateAlarmDisplay() {
+        const alarmBanner = document.getElementById('alarmBanner');
+        const alarmStatus = document.getElementById('alarmStatus');
+        const alarmMessage = document.getElementById('alarmMessage');
+
+        if (this.activeAlarms.size > 0) {
+            // Show alarm
+            alarmBanner.classList.remove('hidden');
+            alarmStatus.className = 'status-alarm';
+            alarmStatus.textContent = `${this.activeAlarms.size} Alarm(s)`;
+            
+            // Create alarm message
+            const alarmList = Array.from(this.activeAlarms).slice(0, 3).join(', ');
+            alarmMessage.textContent = `Alarms: ${alarmList}${this.activeAlarms.size > 3 ? '...' : ''}`;
+            
+            // Play alarm sound if not muted
+            if (!this.isAlarmMuted) {
+                this.playAlarmSound();
+            }
+        } else {
+            // No alarms
+            alarmBanner.classList.add('hidden');
+            alarmStatus.className = 'status-normal';
+            alarmStatus.textContent = 'No Alarms';
+            this.stopAlarmSound();
+        }
+    }
+
+    playAlarmSound() {
+        const alarmSound = document.getElementById('alarmSound');
+        if (alarmSound) {
+            alarmSound.currentTime = 0;
+            alarmSound.play().catch(e => console.log('Audio play failed:', e));
+        }
+    }
+
+    stopAlarmSound() {
+        const alarmSound = document.getElementById('alarmSound');
+        if (alarmSound) {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        }
+    }
+
 
     initializeCharts() {
         const chartOptions = {
@@ -398,8 +572,121 @@ class PowerMonitor {
         }
     }
 }
+async loadLatestData() {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/data/latest`);
+            if (!response.ok) throw new Error('Failed to fetch data');
+            
+            const data = await response.json();
+            this.currentData = data;
+            this.updateDisplay(data);
+            this.updateChartData(data);
+            this.checkAlarms(data); // ADD THIS LINE
+            this.updateConnectionStatus(true);
+            
+        } catch (error) {
+            console.error('Error loading data:', error);
+            this.updateConnectionStatus(false);
+        }
+    }
+
+    // ... your existing chart methods remain the same
+    initializeCharts() { /* your existing code */ }
+    updateDisplay(data) { /* your existing code */ }
+    updateChartData(data) { /* your existing code */ }
+    updateCharts() { /* your existing code */ }
+    updateElement(id, value) { /* your existing code */ }
+    updateConnectionStatus(connected) { /* your existing code */ }
+}
+
+// Global functions for navigation and settings
+function showPage(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    
+    // Show selected page
+    document.getElementById(pageId).classList.add('active');
+    
+    // Update navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.currentTarget.classList.add('active');
+}
+
+function saveSettings() {
+    const monitor = window.powerMonitor;
+    if (!monitor) return;
+
+    // Collect all settings from the form
+    const settings = {};
+    
+    // Voltage settings
+    settings.voltageUa = {
+        min: parseFloat(document.getElementById('min_voltageUa').value),
+        max: parseFloat(document.getElementById('max_voltageUa').value)
+    };
+    settings.voltageUb = {
+        min: parseFloat(document.getElementById('min_voltageUb').value),
+        max: parseFloat(document.getElementById('max_voltageUb').value)
+    };
+    settings.voltageUc = {
+        min: parseFloat(document.getElementById('min_voltageUc').value),
+        max: parseFloat(document.getElementById('max_voltageUc').value)
+    };
+    settings.voltageUab = {
+        min: parseFloat(document.getElementById('min_voltageUab').value),
+        max: parseFloat(document.getElementById('max_voltageUab').value)
+    };
+    settings.voltageUbc = {
+        min: parseFloat(document.getElementById('min_voltageUbc').value),
+        max: parseFloat(document.getElementById('max_voltageUbc').value)
+    };
+    settings.voltageUca = {
+        min: parseFloat(document.getElementById('min_voltageUca').value),
+        max: parseFloat(document.getElementById('max_voltageUca').value)
+    };
+
+    // Current settings
+    settings.currentIa = { max: parseFloat(document.getElementById('max_currentIa').value) };
+    settings.currentIb = { max: parseFloat(document.getElementById('max_currentIb').value) };
+    settings.currentIc = { max: parseFloat(document.getElementById('max_currentIc').value) };
+    settings.currentIn = { max: parseFloat(document.getElementById('max_currentIn').value) };
+
+    // Power settings
+    settings.activePowerA = { max: parseFloat(document.getElementById('max_activePowerA').value) };
+    settings.activePowerB = { max: parseFloat(document.getElementById('max_activePowerB').value) };
+    settings.activePowerC = { max: parseFloat(document.getElementById('max_activePowerC').value) };
+    settings.activePowerTotal = { max: parseFloat(document.getElementById('max_activePowerTotal').value) };
+
+    // Power factor settings
+    settings.powerFactorA = { min: parseFloat(document.getElementById('min_powerFactorA').value) };
+    settings.powerFactorB = { min: parseFloat(document.getElementById('min_powerFactorB').value) };
+    settings.powerFactorC = { min: parseFloat(document.getElementById('min_powerFactorC').value) };
+    settings.powerFactorTotal = { min: parseFloat(document.getElementById('min_powerFactorTotal').value) };
+
+    // Update and save
+    monitor.alarmSettings = settings;
+    monitor.saveAlarmSettings();
+    
+    alert('Settings saved successfully!');
+    showPage('dashboard');
+}
+
+function resetSettings() {
+    if (confirm('Are you sure you want to reset all settings to defaults?')) {
+        const monitor = window.powerMonitor;
+        if (monitor) {
+            monitor.setDefaultAlarmSettings();
+            monitor.populateSettingsForm();
+            alert('Settings reset to defaults!');
+        }
+    }
+}
 
 // Initialize the application when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new PowerMonitor();
+    window.powerMonitor = new PowerMonitor();
 });

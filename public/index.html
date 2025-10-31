@@ -10,74 +10,110 @@
 </head>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-logo">
+                <i class="fas fa-bolt"></i> Power Monitor
+            </div>
+            <div class="nav-links">
+                <button class="nav-btn active" onclick="showPage('dashboard')">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="nav-btn" onclick="showPage('settings')">
+                    <i class="fas fa-cog"></i> Settings
+                </button>
+            </div>
+        </div>
+    </nav>
     <div class="container">
         <header class="header">
             <h1><i class="fas fa-bolt"></i> Power Monitoring System</h1>
             <div class="status-bar">
                 <span id="lastUpdate">Last update: Never</span>
                 <span id="connectionStatus" class="status-offline">Offline</span>
+                <span id="alarmStatus" class="status-normal">No Alarms</span>
             </div>
         </header>
+         <!-- Alarm Banner (hidden by default) -->
+            <div id="alarmBanner" class="alarm-banner hidden">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="alarmMessage">Alarm detected!</span>
+                <button id="muteAlarm" class="mute-btn">
+                    <i class="fas fa-volume-mute"></i> Mute
+                </button>
+            </div>
 
         <div class="dashboard">
-            <!-- Voltage Section -->
+            <!-- Your existing dashboard content remains the same, but with added LEDs -->
+            <!-- Voltage Section with LEDs -->
             <div class="voltage-section">
-                <h2><i class="fas fa-bolt"></i> Voltage Measurements</h2>
-                <div class="voltage-cards">
-                    <div class="card voltage-card">
-                        <h3 class="voltage-title phase-voltages">Phase Voltages</h3>
-                        <div class="voltage-params">
-                            <div class="param">
-                                <label>Ua (A-N):</label>
-                                <span id="voltageUa">0.00 V</span>
-                            </div>
-                            <div class="param">
-                                <label>Ub (B-N):</label>
-                                <span id="voltageUb">0.00 V</span>
-                            </div>
-                            <div class="param">
-                                <label>Uc (C-N):</label>
-                                <span id="voltageUc">0.00 V</span>
+                    <h2><i class="fas fa-bolt"></i> Voltage Measurements</h2>
+                    <div class="voltage-cards">
+                        <div class="card voltage-card">
+                            <h3 class="voltage-title phase-voltages">Phase Voltages</h3>
+                            <div class="voltage-params">
+                                <div class="param">
+                                    <label>Ua (A-N):</label>
+                                    <span id="voltageUa">0.00 V</span>
+                                    <div class="led" id="led_voltageUa"></div>
+                                </div>
+                                <div class="param">
+                                    <label>Ub (B-N):</label>
+                                    <span id="voltageUb">0.00 V</span>
+                                    <div class="led" id="led_voltageUb"></div>
+                                </div>
+                                <div class="param">
+                                    <label>Uc (C-N):</label>
+                                    <span id="voltageUc">0.00 V</span>
+                                    <div class="led" id="led_voltageUc"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card voltage-card">
-                        <h3 class="voltage-title line-voltages">Line Voltages</h3>
-                        <div class="voltage-params">
-                            <div class="param">
-                                <label>Uab (A-B):</label>
-                                <span id="voltageUab">0.00 V</span>
-                            </div>
-                            <div class="param">
-                                <label>Ubc (B-C):</label>
-                                <span id="voltageUbc">0.00 V</span>
-                            </div>
-                            <div class="param">
-                                <label>Uca (C-A):</label>
-                                <span id="voltageUca">0.00 V</span>
+                        <div class="card voltage-card">
+                            <h3 class="voltage-title line-voltages">Line Voltages</h3>
+                            <div class="voltage-params">
+                                <div class="param">
+                                    <label>Uab (A-B):</label>
+                                    <span id="voltageUab">0.00 V</span>
+                                    <div class="led" id="led_voltageUab"></div>
+                                </div>
+                                <div class="param">
+                                    <label>Ubc (B-C):</label>
+                                    <span id="voltageUbc">0.00 V</span>
+                                    <div class="led" id="led_voltageUbc"></div>
+                                </div>
+                                <div class="param">
+                                    <label>Uca (C-A):</label>
+                                    <span id="voltageUca">0.00 V</span>
+                                    <div class="led" id="led_voltageUca"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
             <!-- Summary Cards -->
             <div class="summary-cards">
                 <div class="card summary-card">
                     <h3><i class="fas fa-tachometer-alt"></i> Total Power</h3>
                     <div class="value" id="totalPower">0.00 kW</div>
+                    <div class="led" id="led_totalPower"></div>
                 </div>
                 <div class="card summary-card">
                     <h3><i class="fas fa-wave-square"></i> Frequency</h3>
                     <div class="value" id="frequency">0.00 Hz</div>
+                    <div class="led" id="led_frequency"></div>
                 </div>
                 <div class="card summary-card">
                     <h3><i class="fas fa-plug"></i> Power Factor</h3>
                     <div class="value" id="powerFactor">0.00</div>
+                    <div class="led" id="led_powerFactor"></div>
                 </div>
                 <div class="card summary-card">
                     <h3><i class="fas fa-battery-half"></i> Energy Import</h3>
                     <div class="value" id="energyImport">0.00 kWh</div>
+                    <div class="led" id="led_energyImport"></div>
                 </div>
             </div>
 
@@ -92,18 +128,22 @@
                             <div class="param">
                                 <label>Voltage:</label>
                                 <span id="voltageA">0.00 V</span>
+                                <div class="led" id="led_voltageA"></div>
                             </div>
                             <div class="param">
                                 <label>Current:</label>
                                 <span id="currentA">0.00 A</span>
+                                <div class="led" id="led_currentA"></div>
                             </div>
                             <div class="param">
                                 <label>Active Power:</label>
                                 <span id="powerA">0.00 kW</span>
+                                <div class="led" id="led_powerA"></div>
                             </div>
                             <div class="param">
                                 <label>Power Factor:</label>
                                 <span id="pfA">0.00</span>
+                                <div class="led" id="led_pfA"></div>
                             </div>
                         </div>
                     </div>
@@ -115,18 +155,22 @@
                             <div class="param">
                                 <label>Voltage:</label>
                                 <span id="voltageB">0.00 V</span>
+                                <div class="led" id="led_voltageB"></div>
                             </div>
                             <div class="param">
                                 <label>Current:</label>
                                 <span id="currentB">0.00 A</span>
+                                <div class="led" id="led_currentB"></div>
                             </div>
                             <div class="param">
                                 <label>Active Power:</label>
                                 <span id="powerB">0.00 kW</span>
+                                <div class="led" id="led_powerB"></div>
                             </div>
                             <div class="param">
                                 <label>Power Factor:</label>
                                 <span id="pfB">0.00</span>
+                                <div class="led" id="led_pfB"></div>
                             </div>
                         </div>
                     </div>
@@ -138,18 +182,22 @@
                             <div class="param">
                                 <label>Voltage:</label>
                                 <span id="voltageC">0.00 V</span>
+                                <div class="led" id="led_voltageC"></div>
                             </div>
                             <div class="param">
                                 <label>Current:</label>
                                 <span id="currentC">0.00 A</span>
+                                <div class="led" id="led_currentC"></div>
                             </div>
                             <div class="param">
                                 <label>Active Power:</label>
                                 <span id="powerC">0.00 kW</span>
+                                <div class="led" id="led_powerC"></div>
                             </div>
                             <div class="param">
                                 <label>Power Factor:</label>
                                 <span id="pfC">0.00</span>
+                                <div class="led" id="led_pfC"></div>
                             </div>
                         </div>
                     </div>
@@ -168,18 +216,22 @@
                             <div class="param">
                                 <label>Phase A:</label>
                                 <span id="activePowerA">0.000</span>
+                                <div class="led" id="led_activePowerA"></div>
                             </div>
                             <div class="param">
                                 <label>Phase B:</label>
                                 <span id="activePowerB">0.000</span>
+                                <div class="led" id="led_activePowerB"></div>
                             </div>
                             <div class="param">
                                 <label>Phase C:</label>
                                 <span id="activePowerC">0.000</span>
+                                <div class="led" id="led_activePowerC"></div>
                             </div>
                             <div class="param total">
                                 <label>Total:</label>
                                 <span id="activePowerTotal">0.000</span>
+                                <div class="led" id="led_activePowerTotal"></div>
                             </div>
                         </div>
                     </div>
@@ -191,18 +243,22 @@
                             <div class="param">
                                 <label>Phase A:</label>
                                 <span id="reactivePowerA">0.000</span>
+                                <div class="led" id="led_reactivePowerA"></div>
                             </div>
                             <div class="param">
                                 <label>Phase B:</label>
                                 <span id="reactivePowerB">0.000</span>
+                                <div class="led" id="led_reactivePowerB"></div>
                             </div>
                             <div class="param">
                                 <label>Phase C:</label>
                                 <span id="reactivePowerC">0.000</span>
+                                <div class="led" id="led_reactivePowerC"></div>
                             </div>
                             <div class="param total">
                                 <label>Total:</label>
                                 <span id="reactivePowerTotal">0.000</span>
+                                <div class="led" id="led_reactivePowerTotal"></div>
                             </div>
                         </div>
                     </div>
@@ -214,18 +270,22 @@
                             <div class="param">
                                 <label>Phase A:</label>
                                 <span id="apparentPowerA">0.000</span>
+                                <div class="led" id="led_apparentPowerA"></div>
                             </div>
                             <div class="param">
                                 <label>Phase B:</label>
                                 <span id="apparentPowerB">0.000</span>
+                                <div class="led" id="led_apparentPowerB"></div>
                             </div>
                             <div class="param">
                                 <label>Phase C:</label>
                                 <span id="apparentPowerC">0.000</span>
+                                <div class="led" id="led_apparentPowerC"></div>
                             </div>
                             <div class="param total">
                                 <label>Total:</label>
                                 <span id="apparentPowerTotal">0.000</span>
+                                <div class="led" id="led_apparentPowerTotal"></div>
                             </div>
                         </div>
                     </div>
@@ -237,18 +297,22 @@
                             <div class="param">
                                 <label>Phase A:</label>
                                 <span id="powerFactorA">0.000</span>
+                                <div class="led" id="led_powerFactorA"></div>
                             </div>
                             <div class="param">
                                 <label>Phase B:</label>
                                 <span id="powerFactorB">0.000</span>
+                                <div class="led" id="led_powerFactorB"></div>
                             </div>
                             <div class="param">
                                 <label>Phase C:</label>
                                 <span id="powerFactorC">0.000</span>
+                                <div class="led" id="led_powerFactorC"></div>
                             </div>
                             <div class="param total">
                                 <label>Total:</label>
                                 <span id="powerFactorTotal">0.000</span>
+                                <div class="led" id="led_powerFactorTotal"></div>
                             </div>
                         </div>
                     </div>
@@ -302,7 +366,155 @@
                 </div>
             </div>
     </div>
-    
+    <!-- Settings Page -->
+        <div id="settings" class="page">
+            <header class="header">
+                <h1><i class="fas fa-cog"></i> Alarm Settings</h1>
+                <div class="status-bar">
+                    <span>Set minimum and maximum values for alarms</span>
+                </div>
+            </header>
+
+            <div class="settings-container">
+                <div class="settings-section">
+                    <h2><i class="fas fa-bolt"></i> Voltage Limits</h2>
+                    <div class="limits-grid">
+                        <!-- Voltage Limits -->
+                        <div class="limit-group">
+                            <h3>Phase Voltages (V)</h3>
+                            <div class="limit-row">
+                                <label>Ua Min:</label>
+                                <input type="number" id="min_voltageUa" step="0.1" placeholder="200">
+                                <label>Ua Max:</label>
+                                <input type="number" id="max_voltageUa" step="0.1" placeholder="250">
+                            </div>
+                            <div class="limit-row">
+                                <label>Ub Min:</label>
+                                <input type="number" id="min_voltageUb" step="0.1" placeholder="200">
+                                <label>Ub Max:</label>
+                                <input type="number" id="max_voltageUb" step="0.1" placeholder="250">
+                            </div>
+                            <div class="limit-row">
+                                <label>Uc Min:</label>
+                                <input type="number" id="min_voltageUc" step="0.1" placeholder="200">
+                                <label>Uc Max:</label>
+                                <input type="number" id="max_voltageUc" step="0.1" placeholder="250">
+                            </div>
+                        </div>
+
+                        <div class="limit-group">
+                            <h3>Line Voltages (V)</h3>
+                            <div class="limit-row">
+                                <label>Uab Min:</label>
+                                <input type="number" id="min_voltageUab" step="0.1" placeholder="350">
+                                <label>Uab Max:</label>
+                                <input type="number" id="max_voltageUab" step="0.1" placeholder="450">
+                            </div>
+                            <div class="limit-row">
+                                <label>Ubc Min:</label>
+                                <input type="number" id="min_voltageUbc" step="0.1" placeholder="350">
+                                <label>Ubc Max:</label>
+                                <input type="number" id="max_voltageUbc" step="0.1" placeholder="450">
+                            </div>
+                            <div class="limit-row">
+                                <label>Uca Min:</label>
+                                <input type="number" id="min_voltageUca" step="0.1" placeholder="350">
+                                <label>Uca Max:</label>
+                                <input type="number" id="max_voltageUca" step="0.1" placeholder="450">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2><i class="fas fa-tachometer-alt"></i> Current Limits (A)</h2>
+                    <div class="limits-grid">
+                        <div class="limit-group">
+                            <div class="limit-row">
+                                <label>Ia Max:</label>
+                                <input type="number" id="max_currentIa" step="0.1" placeholder="100">
+                            </div>
+                            <div class="limit-row">
+                                <label>Ib Max:</label>
+                                <input type="number" id="max_currentIb" step="0.1" placeholder="100">
+                            </div>
+                            <div class="limit-row">
+                                <label>Ic Max:</label>
+                                <input type="number" id="max_currentIc" step="0.1" placeholder="100">
+                            </div>
+                            <div class="limit-row">
+                                <label>In Max:</label>
+                                <input type="number" id="max_currentIn" step="0.1" placeholder="50">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h2><i class="fas fa-chart-bar"></i> Power Limits</h2>
+                    <div class="limits-grid">
+                        <div class="limit-group">
+                            <h3>Active Power (kW)</h3>
+                            <div class="limit-row">
+                                <label>Pa Max:</label>
+                                <input type="number" id="max_activePowerA" step="0.1" placeholder="50">
+                            </div>
+                            <div class="limit-row">
+                                <label>Pb Max:</label>
+                                <input type="number" id="max_activePowerB" step="0.1" placeholder="50">
+                            </div>
+                            <div class="limit-row">
+                                <label>Pc Max:</label>
+                                <input type="number" id="max_activePowerC" step="0.1" placeholder="50">
+                            </div>
+                            <div class="limit-row">
+                                <label>Total Max:</label>
+                                <input type="number" id="max_activePowerTotal" step="0.1" placeholder="150">
+                            </div>
+                        </div>
+
+                        <div class="limit-group">
+                            <h3>Power Factor</h3>
+                            <div class="limit-row">
+                                <label>PFa Min:</label>
+                                <input type="number" id="min_powerFactorA" step="0.01" placeholder="0.8" min="0" max="1">
+                            </div>
+                            <div class="limit-row">
+                                <label>PFb Min:</label>
+                                <input type="number" id="min_powerFactorB" step="0.01" placeholder="0.8" min="0" max="1">
+                            </div>
+                            <div class="limit-row">
+                                <label>PFc Min:</label>
+                                <input type="number" id="min_powerFactorC" step="0.01" placeholder="0.8" min="0" max="1">
+                            </div>
+                            <div class="limit-row">
+                                <label>Total Min:</label>
+                                <input type="number" id="min_powerFactorTotal" step="0.01" placeholder="0.8" min="0" max="1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-actions">
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetSettings()">
+                        <i class="fas fa-undo"></i> Reset to Defaults
+                    </button>
+                    <button class="btn btn-success" onclick="showPage('dashboard')">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio element for alarm sound -->
+    <audio id="alarmSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/250/250-preview.mp3" type="audio/mpeg">
+    </audio>
+
     <script src="script.js"></script>
 </body>
 </html>

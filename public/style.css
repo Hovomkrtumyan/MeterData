@@ -61,6 +61,7 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
+    font-size: 1rem;
 }
 
 .nav-btn:hover {
@@ -531,7 +532,7 @@ body {
 
 /* Settings Page */
 .settings-container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
 }
 
@@ -552,48 +553,83 @@ body {
 
 .limits-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 25px;
 }
 
 .limit-group {
     background: rgba(52, 152, 219, 0.1);
-    padding: 15px;
+    padding: 20px;
     border-radius: 10px;
     border-left: 4px solid #3498db;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
 
 .limit-group h3 {
     color: #2c3e50;
-    margin-bottom: 15px;
-    font-size: 1rem;
+    margin-bottom: 0;
+    font-size: 1.1rem;
+    text-align: center;
+    background: rgba(52, 152, 219, 0.2);
+    padding: 8px;
+    border-radius: 5px;
 }
 
 .limit-row {
     display: grid;
-    grid-template-columns: 80px 1fr 80px 1fr;
-    gap: 10px;
+    grid-template-columns: 100px 1fr 100px 1fr;
+    gap: 12px;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 0;
 }
 
 .limit-row label {
     color: #7f8c8d;
     font-weight: 500;
     font-size: 0.9rem;
+    text-align: right;
 }
 
 .limit-row input {
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #bdc3c7;
     border-radius: 5px;
     font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .limit-row input:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+/* Fix for single column inputs (current limits) */
+.limit-single-row {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.limit-single-row label {
+    color: #7f8c8d;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.limit-single-row input {
+    padding: 10px;
+    border: 1px solid #bdc3c7;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .settings-actions {
@@ -688,7 +724,17 @@ body {
     
     .limit-row {
         grid-template-columns: 1fr;
-        gap: 5px;
+        gap: 8px;
+    }
+    
+    .limit-single-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .limit-row label,
+    .limit-single-row label {
+        text-align: left;
     }
     
     .settings-actions {
@@ -706,5 +752,29 @@ body {
     
     .chart-legend {
         justify-content: flex-start;
+    }
+    
+    .nav-btn {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .limits-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .limit-group {
+        padding: 15px;
+    }
+    
+    .settings-section {
+        padding: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        font-size: 0.9rem;
     }
 }

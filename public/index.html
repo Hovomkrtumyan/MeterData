@@ -356,7 +356,7 @@
             </div>
         </div>
 
-        <!-- Settings Page -->
+      <!-- Settings Page -->
         <div id="settings" class="page">
             <header class="header">
                 <h1><i class="fas fa-cog"></i> Alarm Settings</h1>
@@ -421,19 +421,19 @@
                     <h2><i class="fas fa-tachometer-alt"></i> Current Limits (A)</h2>
                     <div class="limits-grid">
                         <div class="limit-group">
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Ia Max:</label>
                                 <input type="number" id="max_currentIa" step="0.1" placeholder="100">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Ib Max:</label>
                                 <input type="number" id="max_currentIb" step="0.1" placeholder="100">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Ic Max:</label>
                                 <input type="number" id="max_currentIc" step="0.1" placeholder="100">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>In Max:</label>
                                 <input type="number" id="max_currentIn" step="0.1" placeholder="50">
                             </div>
@@ -447,19 +447,19 @@
                         <!-- Active Power -->
                         <div class="limit-group">
                             <h3>Active Power (kW)</h3>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Pa Max:</label>
                                 <input type="number" id="max_activePowerA" step="0.1" placeholder="50">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Pb Max:</label>
                                 <input type="number" id="max_activePowerB" step="0.1" placeholder="50">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Pc Max:</label>
                                 <input type="number" id="max_activePowerC" step="0.1" placeholder="50">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Total Max:</label>
                                 <input type="number" id="max_activePowerTotal" step="0.1" placeholder="150">
                             </div>
@@ -468,19 +468,19 @@
                         <!-- Power Factor -->
                         <div class="limit-group">
                             <h3>Power Factor</h3>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>PFa Min:</label>
                                 <input type="number" id="min_powerFactorA" step="0.01" placeholder="0.8" min="0" max="1">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>PFb Min:</label>
                                 <input type="number" id="min_powerFactorB" step="0.01" placeholder="0.8" min="0" max="1">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>PFc Min:</label>
                                 <input type="number" id="min_powerFactorC" step="0.01" placeholder="0.8" min="0" max="1">
                             </div>
-                            <div class="limit-row">
+                            <div class="limit-single-row">
                                 <label>Total Min:</label>
                                 <input type="number" id="min_powerFactorTotal" step="0.01" placeholder="0.8" min="0" max="1">
                             </div>
@@ -501,8 +501,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
+        
     <!-- Audio element for alarm sound -->
     <audio id="alarmSound" preload="auto">
         <source src="https://assets.mixkit.co/active_storage/sfx/250/250-preview.mp3" type="audio/mpeg">

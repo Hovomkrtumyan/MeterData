@@ -571,7 +571,8 @@ class PowerMonitor {
             statusElement.className = connected ? 'status-online' : 'status-offline';
         }
     }
-}
+
+
 async loadLatestData() {
         try {
             const response = await fetch(`${this.baseUrl}/api/data/latest`);

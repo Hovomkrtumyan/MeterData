@@ -7,19 +7,21 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Security middleware
+// Middleware
+app.use(cors({
+    origin: ["http://localhost:3000", "http://192.168.10.12:3000"],
+    credentials: true
+}));
+
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false
 }));
 
-// CORS - allow all origins for now (you can restrict later)
-app.use(cors());
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// MongoDB Connection - Use environment variable
+// MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/power_monitor';
 
 mongoose.connect(MONGODB_URI, {
@@ -29,7 +31,7 @@ mongoose.connect(MONGODB_URI, {
 .then(() => console.log('Connected to MongoDB'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-// Your existing schema and routes here...
+// MongoDB Schema
 const powerDataSchema = new mongoose.Schema({
     Device_ID: String,
     powerData: {
@@ -54,7 +56,13 @@ const powerDataSchema = new mongoose.Schema({
 
 const PowerData = mongoose.model('PowerData', powerDataSchema);
 
-// Routes (keep your existing routes)
+// Enhanced logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+});
+
+// Routes
 app.post('/api/data', async (req, res) => {
     try {
         console.log('Data received from:', req.body.Device_ID);
@@ -99,11 +107,47 @@ app.get('/api/data/latest', async (req, res) => {
     }
 });
 
+app.get('/api/data/history', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 100;
+        const history = await PowerData.find()
+            .sort({ timestamp: -1 })
+            .limit(limit);
+        
+        res.json(history);
+    } catch (error) {
+        console.error('Error fetching history:', error);
+        res.status(500).json({ error: 'Failed to fetch history' });
+    }
+});
+
+app.get('/api/devices', async (req, res) => {
+    try {
+        const devices = await PowerData.distinct('Device_ID');
+        res.json(devices);
+    } catch (error) {
+        console.error('Error fetching devices:', error);
+        res.status(500).json({ error: 'Failed to fetch devices' });
+    }
+});
+
 // Serve frontend for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// MongoDB connection events
+mongoose.connection.on('connected', () => {
+    console.log('Connected to MongoDB');
+});
+
+mongoose.connection.on('error', (err) => {
+    console.error('MongoDB connection error:', err);
+});
+
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Web interface: http://localhost:${PORT}`);
+    console.log(`Also accessible via: http://192.168.10.12:${PORT}`);
+    console.log('Using MongoDB for storage');
 });

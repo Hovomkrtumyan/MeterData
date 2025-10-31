@@ -1,6 +1,3 @@
-// Include Chart.js in your HTML head first!
-// Add this to your HTML: <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 class PowerMonitor {
     constructor() {
         this.baseUrl = window.location.origin;
@@ -10,7 +7,7 @@ class PowerMonitor {
         this.activeAlarms = new Set();
         this.isAlarmMuted = false;
         
-        // Chart data history
+        // Chart data history (keep last 20 points)
         this.chartData = {
             timestamps: [],
             voltages: { Ua: [], Ub: [], Uc: [] },
@@ -30,11 +27,14 @@ class PowerMonitor {
         this.setupEventListeners();
         this.loadLatestData();
         
+        // Update data every 2 seconds
         setInterval(() => this.loadLatestData(), this.updateInterval);
+        
+        // Update charts every 5 seconds (smoother)
         setInterval(() => this.updateCharts(), 5000);
     }
 
-     setupEventListeners() {
+    setupEventListeners() {
         // Mute alarm button
         document.getElementById('muteAlarm').addEventListener('click', () => {
             this.isAlarmMuted = true;
@@ -100,111 +100,6 @@ class PowerMonitor {
             }
         }
     }
-
-    checkAlarms(data) {
-        if (!data || !data.powerData) return;
-
-        const pd = data.powerData;
-        this.activeAlarms.clear();
-
-        // Check voltage alarms
-        this.checkParameterAlarm('voltageUa', pd.voltages.Ua);
-        this.checkParameterAlarm('voltageUb', pd.voltages.Ub);
-        this.checkParameterAlarm('voltageUc', pd.voltages.Uc);
-        this.checkParameterAlarm('voltageUab', pd.voltages.Uab);
-        this.checkParameterAlarm('voltageUbc', pd.voltages.Ubc);
-        this.checkParameterAlarm('voltageUca', pd.voltages.Uca);
-
-        // Check current alarms
-        this.checkParameterAlarm('currentIa', pd.currents.Ia);
-        this.checkParameterAlarm('currentIb', pd.currents.Ib);
-        this.checkParameterAlarm('currentIc', pd.currents.Ic);
-        this.checkParameterAlarm('currentIn', pd.currents.In);
-
-        // Check power alarms
-        this.checkParameterAlarm('activePowerA', pd.activePower.Pa);
-        this.checkParameterAlarm('activePowerB', pd.activePower.Pb);
-        this.checkParameterAlarm('activePowerC', pd.activePower.Pc);
-        this.checkParameterAlarm('activePowerTotal', pd.activePower.Total);
-
-        // Check power factor alarms
-        this.checkParameterAlarm('powerFactorA', pd.powerFactor.PFa);
-        this.checkParameterAlarm('powerFactorB', pd.powerFactor.PFb);
-        this.checkParameterAlarm('powerFactorC', pd.powerFactor.PFc);
-        this.checkParameterAlarm('powerFactorTotal', pd.powerFactor.Total);
-
-        this.updateAlarmDisplay();
-    }
-
-    checkParameterAlarm(parameter, value) {
-        const limits = this.alarmSettings[parameter];
-        if (!limits) return;
-
-        let isAlarm = false;
-        
-        if (limits.min !== undefined && value < limits.min) {
-            isAlarm = true;
-        }
-        if (limits.max !== undefined && value > limits.max) {
-            isAlarm = true;
-        }
-
-        // Update LED
-        const led = document.getElementById(`led_${parameter}`);
-        if (led) {
-            if (isAlarm) {
-                led.className = 'led alarm';
-                this.activeAlarms.add(parameter);
-            } else {
-                led.className = 'led normal';
-            }
-        }
-    }
-
-    updateAlarmDisplay() {
-        const alarmBanner = document.getElementById('alarmBanner');
-        const alarmStatus = document.getElementById('alarmStatus');
-        const alarmMessage = document.getElementById('alarmMessage');
-
-        if (this.activeAlarms.size > 0) {
-            // Show alarm
-            alarmBanner.classList.remove('hidden');
-            alarmStatus.className = 'status-alarm';
-            alarmStatus.textContent = `${this.activeAlarms.size} Alarm(s)`;
-            
-            // Create alarm message
-            const alarmList = Array.from(this.activeAlarms).slice(0, 3).join(', ');
-            alarmMessage.textContent = `Alarms: ${alarmList}${this.activeAlarms.size > 3 ? '...' : ''}`;
-            
-            // Play alarm sound if not muted
-            if (!this.isAlarmMuted) {
-                this.playAlarmSound();
-            }
-        } else {
-            // No alarms
-            alarmBanner.classList.add('hidden');
-            alarmStatus.className = 'status-normal';
-            alarmStatus.textContent = 'No Alarms';
-            this.stopAlarmSound();
-        }
-    }
-
-    playAlarmSound() {
-        const alarmSound = document.getElementById('alarmSound');
-        if (alarmSound) {
-            alarmSound.currentTime = 0;
-            alarmSound.play().catch(e => console.log('Audio play failed:', e));
-        }
-    }
-
-    stopAlarmSound() {
-        const alarmSound = document.getElementById('alarmSound');
-        if (alarmSound) {
-            alarmSound.pause();
-            alarmSound.currentTime = 0;
-        }
-    }
-
 
     initializeCharts() {
         const chartOptions = {
@@ -409,6 +304,7 @@ class PowerMonitor {
             this.currentData = data;
             this.updateDisplay(data);
             this.updateChartData(data);
+            this.checkAlarms(data);
             this.updateConnectionStatus(true);
             
         } catch (error) {
@@ -456,7 +352,7 @@ class PowerMonitor {
         this.updateElement('pfB', pd.powerFactor.PFb.toFixed(3));
         this.updateElement('pfC', pd.powerFactor.PFc.toFixed(3));
 
-        // UPDATE: Add power analysis data
+        // Update power analysis data
         this.updateElement('activePowerA', pd.activePower.Pa.toFixed(3));
         this.updateElement('activePowerB', pd.activePower.Pb.toFixed(3));
         this.updateElement('activePowerC', pd.activePower.Pc.toFixed(3));
@@ -477,7 +373,6 @@ class PowerMonitor {
         this.updateElement('powerFactorC', pd.powerFactor.PFc.toFixed(3));
         this.updateElement('powerFactorTotal', pd.powerFactor.Total.toFixed(3));
 
-
         // Update timestamp
         const now = new Date();
         this.updateElement('lastUpdate', `Last update: ${now.toLocaleTimeString()}`);
@@ -496,8 +391,7 @@ class PowerMonitor {
             Object.values(this.chartData.voltages).forEach(arr => arr.shift());
             Object.values(this.chartData.currents).forEach(arr => arr.shift());
             Object.values(this.chartData.powers).forEach(arr => arr.shift());
-            // Add this for reactive power charts if needed later
-            //Object.values(this.chartData.reactivePowers).forEach(arr => arr.shift());
+            Object.values(this.chartData.reactivePowers).forEach(arr => arr.shift());
         }
 
         // Add new data
@@ -514,18 +408,17 @@ class PowerMonitor {
         this.chartData.currents.Ic.push(pd.currents.Ic);
         this.chartData.currents.In.push(pd.currents.In);
         
-        // Powers
+        // Active Powers
         this.chartData.powers.Pa.push(pd.activePower.Pa);
         this.chartData.powers.Pb.push(pd.activePower.Pb);
         this.chartData.powers.Pc.push(pd.activePower.Pc);
         this.chartData.powers.Total.push(pd.activePower.Total);
 
-        // Reactive Powers (for future charts)
-        // this.chartData.reactivePowers = this.chartData.reactivePowers || { Qa: [], Qb: [], Qc: [], Total: [] };
-        // this.chartData.reactivePowers.Qa.push(pd.reactivePower.Qa);
-        // this.chartData.reactivePowers.Qb.push(pd.reactivePower.Qb);
-        // this.chartData.reactivePowers.Qc.push(pd.reactivePower.Qc);
-        // this.chartData.reactivePowers.Total.push(pd.reactivePower.Total);
+        // Reactive Powers
+        this.chartData.reactivePowers.Qa.push(pd.reactivePower.Qa);
+        this.chartData.reactivePowers.Qb.push(pd.reactivePower.Qb);
+        this.chartData.reactivePowers.Qc.push(pd.reactivePower.Qc);
+        this.chartData.reactivePowers.Total.push(pd.reactivePower.Total);
     }
 
     updateCharts() {
@@ -555,6 +448,110 @@ class PowerMonitor {
         this.charts.power.update('none');
     }
 
+    checkAlarms(data) {
+        if (!data || !data.powerData) return;
+
+        const pd = data.powerData;
+        this.activeAlarms.clear();
+
+        // Check voltage alarms
+        this.checkParameterAlarm('voltageUa', pd.voltages.Ua);
+        this.checkParameterAlarm('voltageUb', pd.voltages.Ub);
+        this.checkParameterAlarm('voltageUc', pd.voltages.Uc);
+        this.checkParameterAlarm('voltageUab', pd.voltages.Uab);
+        this.checkParameterAlarm('voltageUbc', pd.voltages.Ubc);
+        this.checkParameterAlarm('voltageUca', pd.voltages.Uca);
+
+        // Check current alarms
+        this.checkParameterAlarm('currentIa', pd.currents.Ia);
+        this.checkParameterAlarm('currentIb', pd.currents.Ib);
+        this.checkParameterAlarm('currentIc', pd.currents.Ic);
+        this.checkParameterAlarm('currentIn', pd.currents.In);
+
+        // Check power alarms
+        this.checkParameterAlarm('activePowerA', pd.activePower.Pa);
+        this.checkParameterAlarm('activePowerB', pd.activePower.Pb);
+        this.checkParameterAlarm('activePowerC', pd.activePower.Pc);
+        this.checkParameterAlarm('activePowerTotal', pd.activePower.Total);
+
+        // Check power factor alarms
+        this.checkParameterAlarm('powerFactorA', pd.powerFactor.PFa);
+        this.checkParameterAlarm('powerFactorB', pd.powerFactor.PFb);
+        this.checkParameterAlarm('powerFactorC', pd.powerFactor.PFc);
+        this.checkParameterAlarm('powerFactorTotal', pd.powerFactor.Total);
+
+        this.updateAlarmDisplay();
+    }
+
+    checkParameterAlarm(parameter, value) {
+        const limits = this.alarmSettings[parameter];
+        if (!limits) return;
+
+        let isAlarm = false;
+        
+        if (limits.min !== undefined && value < limits.min) {
+            isAlarm = true;
+        }
+        if (limits.max !== undefined && value > limits.max) {
+            isAlarm = true;
+        }
+
+        // Update LED
+        const led = document.getElementById(`led_${parameter}`);
+        if (led) {
+            if (isAlarm) {
+                led.className = 'led alarm';
+                this.activeAlarms.add(parameter);
+            } else {
+                led.className = 'led normal';
+            }
+        }
+    }
+
+    updateAlarmDisplay() {
+        const alarmBanner = document.getElementById('alarmBanner');
+        const alarmStatus = document.getElementById('alarmStatus');
+        const alarmMessage = document.getElementById('alarmMessage');
+
+        if (this.activeAlarms.size > 0) {
+            // Show alarm
+            alarmBanner.classList.remove('hidden');
+            alarmStatus.className = 'status-alarm';
+            alarmStatus.textContent = `${this.activeAlarms.size} Alarm(s)`;
+            
+            // Create alarm message
+            const alarmList = Array.from(this.activeAlarms).slice(0, 3).join(', ');
+            alarmMessage.textContent = `Alarms: ${alarmList}${this.activeAlarms.size > 3 ? '...' : ''}`;
+            
+            // Play alarm sound if not muted
+            if (!this.isAlarmMuted) {
+                this.playAlarmSound();
+            }
+        } else {
+            // No alarms
+            alarmBanner.classList.add('hidden');
+            alarmStatus.className = 'status-normal';
+            alarmStatus.textContent = 'No Alarms';
+            this.stopAlarmSound();
+        }
+    }
+
+    playAlarmSound() {
+        const alarmSound = document.getElementById('alarmSound');
+        if (alarmSound) {
+            alarmSound.currentTime = 0;
+            alarmSound.play().catch(e => console.log('Audio play failed:', e));
+        }
+    }
+
+    stopAlarmSound() {
+        const alarmSound = document.getElementById('alarmSound');
+        if (alarmSound) {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        }
+    }
+
     updateElement(id, value) {
         const element = document.getElementById(id);
         if (element && element.textContent !== value) {
@@ -571,33 +568,6 @@ class PowerMonitor {
             statusElement.className = connected ? 'status-online' : 'status-offline';
         }
     }
-
-
-async loadLatestData() {
-        try {
-            const response = await fetch(`${this.baseUrl}/api/data/latest`);
-            if (!response.ok) throw new Error('Failed to fetch data');
-            
-            const data = await response.json();
-            this.currentData = data;
-            this.updateDisplay(data);
-            this.updateChartData(data);
-            this.checkAlarms(data); // ADD THIS LINE
-            this.updateConnectionStatus(true);
-            
-        } catch (error) {
-            console.error('Error loading data:', error);
-            this.updateConnectionStatus(false);
-        }
-    }
-
-    // ... your existing chart methods remain the same
-    initializeCharts() { /* your existing code */ }
-    updateDisplay(data) { /* your existing code */ }
-    updateChartData(data) { /* your existing code */ }
-    updateCharts() { /* your existing code */ }
-    updateElement(id, value) { /* your existing code */ }
-    updateConnectionStatus(connected) { /* your existing code */ }
 }
 
 // Global functions for navigation and settings

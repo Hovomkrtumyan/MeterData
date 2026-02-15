@@ -299,9 +299,10 @@ class PowerMonitor {
                 this.updateElement('lastUpdate', 'No data received yet');
                 return;
             }
-            // Check if data is stale (older than 30 seconds)
-            const dataAge = data.timestamp ? (Date.now() - new Date(data.timestamp).getTime()) : Infinity;
-            const isOnline = dataAge < 30000;
+            // Check if data is stale (older than 10 minutes)
+            const dataTime = data.timestamp ? new Date(data.timestamp).getTime() : (data._id ? new Date(parseInt(data._id.substring(0, 8), 16) * 1000).getTime() : 0);
+            const dataAge = dataTime ? (Date.now() - dataTime) : Infinity;
+            const isOnline = dataAge < 600000;
             this.currentData = data;
             this.updateDisplay(data);
             this.updateChartData(data);
@@ -362,7 +363,7 @@ class PowerMonitor {
             this.updateElement('thdIb', `${pd.thd.Ib?.toFixed(2) || '0.00'} %`);
             this.updateElement('thdIc', `${pd.thd.Ic?.toFixed(2) || '0.00'} %`);
         }
-        const dataTime = data.timestamp ? new Date(data.timestamp) : null;
+        const dataTime = data.timestamp ? new Date(data.timestamp) : (data._id ? new Date(parseInt(data._id.substring(0, 8), 16) * 1000) : null);
         if (dataTime) {
             this.updateElement('lastUpdate', `Last update: ${dataTime.toLocaleString()} (${this.currentDevice})`);
         } else {

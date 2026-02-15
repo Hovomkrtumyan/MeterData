@@ -188,9 +188,34 @@ class PowerMonitor {
         } catch (e) { console.error('Error loading tree:', e); }
     }
 
+    getExpandedNodes() {
+        const expanded = new Set();
+        document.querySelectorAll('.tree-children:not(.hidden)').forEach(el => {
+            const header = el.previousElementSibling;
+            if (header) {
+                const label = header.querySelector('.tree-label');
+                if (label) expanded.add(label.textContent);
+            }
+        });
+        return expanded;
+    }
+
+    restoreExpandedNodes(expanded) {
+        document.querySelectorAll('.tree-header').forEach(header => {
+            const label = header.querySelector('.tree-label');
+            if (label && expanded.has(label.textContent)) {
+                const children = header.nextElementSibling;
+                const arrow = header.querySelector('.tree-arrow');
+                if (children) children.classList.remove('hidden');
+                if (arrow) arrow.classList.add('open');
+            }
+        });
+    }
+
     renderTree() {
         const container = document.getElementById('deviceSidebar');
         if (!container) return;
+        const expanded = this.getExpandedNodes();
         if (this.treeData.length === 0) {
             container.innerHTML = '<div class="empty-state"><i class="fas fa-city"></i><p>No data. Add a city to start.</p></div>';
             return;
@@ -259,6 +284,7 @@ class PowerMonitor {
                 </div>
             </div>
         `).join('');
+        this.restoreExpandedNodes(expanded);
     }
 
     // ===== DATA DISPLAY =====

@@ -6,8 +6,8 @@ class PowerMonitor {
         this.alarmSettings = {};
         this.activeAlarms = new Set();
         this.isAlarmMuted = false;
-        this.availableDevices = ["ESP32_01"];
-        this.currentDevice = "ESP32_01";
+        this.availableDevices = ["EKF_01"];
+        this.currentDevice = "EKF_01";
         
         // Chart data history (keep last 20 points)
         this.chartData = {
@@ -113,12 +113,12 @@ class PowerMonitor {
             if (!response.ok) throw new Error('Failed to fetch devices');
             
             const devices = await response.json();
-            this.availableDevices = devices.length > 0 ? devices : ["ESP32_01"];
+            this.availableDevices = devices.length > 0 ? devices : ["EKF_01"];
             this.populateDeviceSelector();
             
         } catch (error) {
             console.error('Error loading devices:', error);
-            this.availableDevices = ["ESP32_01"];
+            this.availableDevices = ["EKF_01"];
             this.populateDeviceSelector();
         }
     }
@@ -152,8 +152,8 @@ class PowerMonitor {
         // If no devices available, show default
         if (this.availableDevices.length === 0) {
             const option = document.createElement('option');
-            option.value = "ESP32_01";
-            option.textContent = "ESP32_01";
+            option.value = "EKF_01";
+            option.textContent = "EKF_01";
             deviceSelect.appendChild(option);
         }
     }

@@ -128,7 +128,7 @@ app.post('/api/data', async (req, res) => {
 
 app.get('/api/data/latest', requireAuth, async (req, res) => {
     try {
-        const deviceId = req.query.device || "ESP32_01";
+        const deviceId = req.query.device || "EKF_01";
         
         const latestData = await PowerData.findOne({ Device_ID: deviceId }).sort({ timestamp: -1 });
         
@@ -158,7 +158,7 @@ app.get('/api/data/latest', requireAuth, async (req, res) => {
 
 app.get('/api/data/history', requireAuth, async (req, res) => {
     try {
-        const deviceId = req.query.device || "ESP32_01";
+        const deviceId = req.query.device || "EKF_01";
         const limit = parseInt(req.query.limit) || 100;
         
         const history = await PowerData.find({ Device_ID: deviceId })

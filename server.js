@@ -23,6 +23,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
+const DEVICE_API_KEY = process.env.DEVICE_API_KEY || 'change-this-secret-key';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/power_monitor';
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
@@ -106,6 +107,11 @@ app.use((req, res, next) => {
 
 app.post('/api/data', async (req, res) => {
     try {
+        // Validate API key
+        const apiKey = req.headers['x-api-key'] || req.query.apiKey;
+        if (!apiKey || apiKey !== DEVICE_API_KEY) {
+            return res.status(401).json({ error: 'Invalid or missing API key' });
+        }
         console.log('Data received from:', req.body.Device_ID);
         const newData = new PowerData(req.body);
         await newData.save();

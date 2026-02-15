@@ -23,7 +23,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
-const DEVICE_API_KEY = process.env.DEVICE_API_KEY || 'change-this-secret-key';
+// Load API key from env var, or from secret file on Render
+let DEVICE_API_KEY = process.env.DEVICE_API_KEY;
+if (!DEVICE_API_KEY) {
+    try {
+        const fs = require('fs');
+        const envPaths = ['/etc/secrets/.env', path.join(__dirname, '.env')];
+        for (const p of envPaths) {
+            if (fs.existsSync(p)) {
+                const content = fs.readFileSync(p, 'utf8');
+                const match = content.match(/DEVICE_API_KEY=(.+)/);
+                if (match) { DEVICE_API_KEY = match[1].trim(); break; }
+            }
+        }
+    } catch (e) { /* ignore */ }
+}
+if (!DEVICE_API_KEY) DEVICE_API_KEY = 'change-this-secret-key';
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/power_monitor';
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))

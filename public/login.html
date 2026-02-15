@@ -215,90 +215,28 @@
                 </button>
             </form>
 
-            <form id="registerForm" class="hidden">
-                <div class="form-group">
-                    <label for="regUsername">
-                        <i class="fas fa-user"></i> Username
-                    </label>
-                    <input type="text" id="regUsername" name="username" required autocomplete="username" placeholder="Choose a username">
-                </div>
-
-                <div class="form-group">
-                    <label for="regPassword">
-                        <i class="fas fa-lock"></i> Password
-                    </label>
-                    <input type="password" id="regPassword" name="password" required autocomplete="new-password" placeholder="Choose a password (min 6 chars)">
-                </div>
-
-                <div class="form-group">
-                    <label for="regConfirmPassword">
-                        <i class="fas fa-lock"></i> Confirm Password
-                    </label>
-                    <input type="password" id="regConfirmPassword" name="confirmPassword" required autocomplete="new-password" placeholder="Confirm your password">
-                </div>
-
-                <button type="submit" class="register-btn" id="registerBtn">
-                    <i class="fas fa-user-plus"></i> Register
-                </button>
-            </form>
-
             <div class="toggle-form">
-                <p id="toggleText">Don't have an account? <a onclick="toggleForm()">Register here</a></p>
+                <p>Contact your administrator for an account</p>
             </div>
         </div>
     </div>
 
     <script>
         const baseUrl = window.location.origin;
-        let isLoginForm = true;
-
         async function checkAuth() {
-            // Prevent redirect loops
-            if (sessionStorage.getItem('authCheckInProgress')) {
-                return;
-            }
-            sessionStorage.setItem('authCheckInProgress', 'true');
-            
+            sessionStorage.removeItem('authCheckInProgress');
             try {
-                const response = await fetch(`${baseUrl}/api/auth/status`, {
-                    credentials: 'include'
-                });
+                const response = await fetch(`${baseUrl}/api/auth/status`, { credentials: 'include' });
                 const data = await response.json();
                 if (data.authenticated) {
                     window.location.href = '/';
-                } else {
-                    // Clear flag if not authenticated (stay on login page)
-                    sessionStorage.removeItem('authCheckInProgress');
                 }
             } catch (error) {
                 console.error('Auth check failed:', error);
-                sessionStorage.removeItem('authCheckInProgress');
             }
         }
 
         checkAuth();
-
-        function toggleForm() {
-            isLoginForm = !isLoginForm;
-            const loginForm = document.getElementById('loginForm');
-            const registerForm = document.getElementById('registerForm');
-            const subtitle = document.getElementById('formSubtitle');
-            const toggleText = document.getElementById('toggleText');
-
-            hideMessages();
-
-            if (isLoginForm) {
-                loginForm.classList.remove('hidden');
-                registerForm.classList.add('hidden');
-                subtitle.textContent = 'Please login to access the dashboard';
-                toggleText.innerHTML = 'Don\'t have an account? <a onclick="toggleForm()">Register here</a>';
-            } else {
-                loginForm.classList.add('hidden');
-                registerForm.classList.remove('hidden');
-                subtitle.textContent = 'Create a new account';
-                toggleText.innerHTML = 'Already have an account? <a onclick="toggleForm()">Login here</a>';
-            }
-        }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -342,65 +280,6 @@
                 showError('Network error. Please try again.');
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
-            }
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            const registerBtn = document.getElementById('registerBtn');
-            
-            hideMessages();
-            
-            if (!username || !password) {
-                showError('Please enter username and password');
-                return;
-            }
-
-            if (password.length < 6) {
-                showError('Password must be at least 6 characters');
-                return;
-            }
-
-            if (password !== confirmPassword) {
-                showError('Passwords do not match');
-                return;
-            }
-
-            registerBtn.disabled = true;
-            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
-
-            try {
-                const response = await fetch(`${baseUrl}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ username, password })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showSuccess('Registration successful! You can now login.');
-                    setTimeout(() => {
-                        toggleForm();
-                        document.getElementById('loginUsername').value = username;
-                        document.getElementById('loginPassword').value = '';
-                        document.getElementById('loginPassword').focus();
-                    }, 1500);
-                } else {
-                    showError(data.error || 'Registration failed');
-                    registerBtn.disabled = false;
-                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
-                }
-            } catch (error) {
-                console.error('Registration error:', error);
-                showError('Network error. Please try again.');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
             }
         });
 

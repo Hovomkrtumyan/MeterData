@@ -1,4 +1,5 @@
 const express = require('express');
+// v2.0 - THD support, auth, admin panel
 const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');

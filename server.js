@@ -153,7 +153,7 @@ app.get('/api/data/latest', requireAuth, async (req, res) => {
     try {
         const deviceId = req.query.device || "EKF_01";
         const latestData = await PowerData.findOne({ Device_ID: deviceId }).sort({ timestamp: -1 });
-        if (!latestData) return res.json({ Device_ID: deviceId, powerData: emptyPowerData });
+        if (!latestData) return res.json({ Device_ID: deviceId, powerData: emptyPowerData, noData: true });
         res.json(latestData);
     } catch (error) {
         console.error('Error fetching data:', error);

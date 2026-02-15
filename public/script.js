@@ -294,11 +294,19 @@ class PowerMonitor {
             const response = await fetch(`${this.baseUrl}/api/data/latest?device=${encodeURIComponent(this.currentDevice)}`, { credentials: 'include' });
             if (!response.ok) throw new Error('Failed to fetch data');
             const data = await response.json();
+            if (data.noData) {
+                this.updateConnectionStatus(false);
+                this.updateElement('lastUpdate', 'No data received yet');
+                return;
+            }
+            // Check if data is stale (older than 30 seconds)
+            const dataAge = data.timestamp ? (Date.now() - new Date(data.timestamp).getTime()) : Infinity;
+            const isOnline = dataAge < 30000;
             this.currentData = data;
             this.updateDisplay(data);
             this.updateChartData(data);
             this.checkAlarms(data);
-            this.updateConnectionStatus(true);
+            this.updateConnectionStatus(isOnline);
         } catch (error) {
             console.error('Error loading data:', error);
             this.updateConnectionStatus(false);
@@ -354,8 +362,12 @@ class PowerMonitor {
             this.updateElement('thdIb', `${pd.thd.Ib?.toFixed(2) || '0.00'} %`);
             this.updateElement('thdIc', `${pd.thd.Ic?.toFixed(2) || '0.00'} %`);
         }
-        const now = new Date();
-        this.updateElement('lastUpdate', `Last update: ${now.toLocaleTimeString()} (${this.currentDevice})`);
+        const dataTime = data.timestamp ? new Date(data.timestamp) : null;
+        if (dataTime) {
+            this.updateElement('lastUpdate', `Last update: ${dataTime.toLocaleString()} (${this.currentDevice})`);
+        } else {
+            this.updateElement('lastUpdate', `No timestamp (${this.currentDevice})`);
+        }
     }
 
     updateChartData(data) {

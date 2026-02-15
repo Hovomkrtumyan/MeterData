@@ -19,19 +19,62 @@ class PowerMonitor {
         };
         
         this.charts = {};
-        this.init();
+        this.checkAuth();
     }
 
-    init() {
-        console.log("Power Monitor initialized");
-        this.loadAlarmSettings();
-        this.initializeCharts();
-        this.setupEventListeners();
-        this.loadAvailableDevices();
-        this.loadLatestData();
+    async checkAuth() {
+        // Prevent redirect loops
+        if (sessionStorage.getItem('authCheckInProgress')) {
+            return;
+        }
+        sessionStorage.setItem('authCheckInProgress', 'true');
         
-        setInterval(() => this.loadLatestData(), this.updateInterval);
-        setInterval(() => this.updateCharts(), 5000);
+        try {
+            const response = await fetch(`${this.baseUrl}/api/auth/status`, {
+                credentials: 'include'
+            });
+            const data = await response.json();
+            
+            if (!data.authenticated) {
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Clear the flag on successful auth
+            sessionStorage.removeItem('authCheckInProgress');
+            
+            // Show username and role in navbar if elements exist
+            const userElement = document.getElementById('currentUser');
+            if (userElement) {
+                userElement.textContent = data.username;
+            }
+            
+            const roleElement = document.getElementById('userRole');
+            if (roleElement && data.role) {
+                roleElement.textContent = data.role;
+                roleElement.className = 'nav-role' + (data.role === 'admin' ? ' admin' : '');
+            }
+            
+            // Show admin button and banner if user is admin
+            if (data.role === 'admin') {
+                document.querySelectorAll('.admin-only').forEach(el => {
+                    el.classList.remove('hidden');
+                    el.classList.add('visible');
+                });
+                // Show admin banner on dashboard
+                const adminBanner = document.getElementById('adminBanner');
+                if (adminBanner) {
+                    adminBanner.classList.remove('hidden');
+                }
+                this.isAdmin = true;
+            }
+            
+            this.init();
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            sessionStorage.removeItem('authCheckInProgress');
+            window.location.href = '/login.html';
+        }
     }
 
     setupEventListeners() {
@@ -54,11 +97,19 @@ class PowerMonitor {
         document.getElementById('refreshDevices').addEventListener('click', () => {
             this.loadAvailableDevices();
         });
+        
+        // Logout button
+        const logoutBtn = document.querySelector('.logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.logout());
+        }
     }
 
     async loadAvailableDevices() {
         try {
-            const response = await fetch(`${this.baseUrl}/api/devices`);
+            const response = await fetch(`${this.baseUrl}/api/devices`, {
+                credentials: 'include'
+            });
             if (!response.ok) throw new Error('Failed to fetch devices');
             
             const devices = await response.json();
@@ -69,6 +120,20 @@ class PowerMonitor {
             console.error('Error loading devices:', error);
             this.availableDevices = ["ESP32_01"];
             this.populateDeviceSelector();
+        }
+    }
+
+    async logout() {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/auth/logout`, {
+                credentials: 'include',
+                method: 'POST'
+            });
+            if (!response.ok) throw new Error('Failed to logout');
+            
+            window.location.href = '/login.html';
+        } catch (error) {
+            console.error('Error logging out:', error);
         }
     }
 
@@ -382,7 +447,9 @@ class PowerMonitor {
 
     async loadLatestData() {
         try {
-            const response = await fetch(`${this.baseUrl}/api/data/latest?device=${encodeURIComponent(this.currentDevice)}`);
+            const response = await fetch(`${this.baseUrl}/api/data/latest?device=${encodeURIComponent(this.currentDevice)}`, {
+                credentials: 'include'
+            });
             if (!response.ok) throw new Error('Failed to fetch data');
             
             const data = await response.json();
@@ -457,6 +524,16 @@ class PowerMonitor {
         this.updateElement('powerFactorB', pd.powerFactor.PFb.toFixed(3));
         this.updateElement('powerFactorC', pd.powerFactor.PFc.toFixed(3));
         this.updateElement('powerFactorTotal', pd.powerFactor.Total.toFixed(3));
+
+        // Update THD values
+        if (pd.thd) {
+            this.updateElement('thdUa', `${pd.thd.Ua?.toFixed(2) || '0.00'} %`);
+            this.updateElement('thdUb', `${pd.thd.Ub?.toFixed(2) || '0.00'} %`);
+            this.updateElement('thdUc', `${pd.thd.Uc?.toFixed(2) || '0.00'} %`);
+            this.updateElement('thdIa', `${pd.thd.Ia?.toFixed(2) || '0.00'} %`);
+            this.updateElement('thdIb', `${pd.thd.Ib?.toFixed(2) || '0.00'} %`);
+            this.updateElement('thdIc', `${pd.thd.Ic?.toFixed(2) || '0.00'} %`);
+        }
 
         // Update timestamp
         const now = new Date();
@@ -641,8 +718,11 @@ class PowerMonitor {
         const element = document.getElementById(id);
         if (element && element.textContent !== value) {
             element.textContent = value;
-            element.classList.add('value-updated');
-            setTimeout(() => element.classList.remove('value-updated'), 500);
+            // Only add pulse animation if value is not a placeholder zero
+            if (!value.startsWith('0.00') && !value.startsWith('0.0 ')) {
+                element.classList.add('value-updated');
+                setTimeout(() => element.classList.remove('value-updated'), 500);
+            }
         }
     }
 
@@ -652,6 +732,105 @@ class PowerMonitor {
             statusElement.textContent = connected ? 'Online' : 'Offline';
             statusElement.className = connected ? 'status-online' : 'status-offline';
         }
+    }
+
+    async loadAdminUsers() {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/admin/users`, {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to fetch users');
+            
+            const users = await response.json();
+            this.renderUserTree(users);
+        } catch (error) {
+            console.error('Error loading users:', error);
+            const userTree = document.getElementById('userTree');
+            if (userTree) {
+                userTree.innerHTML = '<div class="no-users"><i class="fas fa-exclamation-circle"></i><p>Error loading users</p></div>';
+            }
+        }
+    }
+
+    renderUserTree(users) {
+        const userTree = document.getElementById('userTree');
+        if (!userTree) return;
+
+        if (users.length === 0) {
+            userTree.innerHTML = '<div class="no-users"><i class="fas fa-users-slash"></i><p>No users found</p></div>';
+            return;
+        }
+
+        userTree.innerHTML = users.map(user => `
+            <div class="user-item" data-user-id="${user._id}" onclick="window.powerMonitor.selectUser('${user._id}', '${user.username}', '${user.role}')">
+                <i class="fas fa-${user.role === 'admin' ? 'user-shield' : 'user'}"></i>
+                <div class="user-info">
+                    <div class="user-name">${user.username}</div>
+                    <div class="user-role">${user.role}</div>
+                    <div class="user-date">${new Date(user.createdAt).toLocaleDateString()}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async selectUser(userId, username, role) {
+        // Update active state in UI
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        const selectedItem = document.querySelector(`[data-user-id="${userId}"]`);
+        if (selectedItem) {
+            selectedItem.classList.add('active');
+        }
+
+        // Update selected user info
+        const selectedUserInfo = document.getElementById('selectedUserInfo');
+        if (selectedUserInfo) {
+            selectedUserInfo.innerHTML = `
+                <h3><i class="fas fa-${role === 'admin' ? 'user-shield' : 'user-circle'}"></i> ${username}</h3>
+                <p>Role: <strong>${role}</strong></p>
+                <p>ID: ${userId}</p>
+            `;
+        }
+
+        // Load user data
+        await this.loadUserData(userId);
+    }
+
+    async loadUserData(userId) {
+        try {
+            const response = await fetch(`${this.baseUrl}/api/admin/user-data/${userId}`, {
+                credentials: 'include'
+            });
+            if (!response.ok) throw new Error('Failed to fetch user data');
+            
+            const data = await response.json();
+            this.renderUserDevices(data.devices);
+        } catch (error) {
+            console.error('Error loading user data:', error);
+            const userDevices = document.getElementById('userDevices');
+            if (userDevices) {
+                userDevices.innerHTML = '<p class="no-users">Error loading user devices</p>';
+            }
+        }
+    }
+
+    renderUserDevices(devices) {
+        const userDevices = document.getElementById('userDevices');
+        if (!userDevices) return;
+
+        if (!devices || devices.length === 0) {
+            userDevices.innerHTML = '<div class="no-users"><i class="fas fa-microchip"></i><p>No devices registered</p></div>';
+            return;
+        }
+
+        userDevices.innerHTML = devices.map(device => `
+            <div class="device-card">
+                <i class="fas fa-microchip"></i>
+                <div class="device-name">${device}</div>
+                <div class="device-status">Active</div>
+            </div>
+        `).join('');
     }
 }
 
@@ -682,6 +861,11 @@ function showPage(pageId) {
     // If switching to dashboard, refresh data immediately
     if (pageId === 'dashboard' && window.powerMonitor) {
         window.powerMonitor.loadLatestData();
+    }
+    
+    // If switching to admin page, load users
+    if (pageId === 'admin' && window.powerMonitor && window.powerMonitor.isAdmin) {
+        window.powerMonitor.loadAdminUsers();
     }
 }
 

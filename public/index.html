@@ -16,11 +16,19 @@
                 <i class="fas fa-bolt"></i> Power Monitor
             </div>
             <div class="nav-links">
+                <span id="currentUser" class="nav-user"></span>
+                <span id="userRole" class="nav-role"></span>
                 <button class="nav-btn active" onclick="showPage('dashboard')">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </button>
+                <button class="nav-btn admin-only hidden" onclick="showPage('admin')">
+                    <i class="fas fa-users-cog"></i> Admin
+                </button>
                 <button class="nav-btn" onclick="showPage('settings')">
                     <i class="fas fa-cog"></i> Settings
+                </button>
+                <button class="nav-btn logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
         </div>
@@ -48,6 +56,12 @@
                     <span id="alarmStatus" class="status-normal">No Alarms</span>
                 </div>
             </header>
+
+            <!-- Admin Banner -->
+            <div id="adminBanner" class="admin-status-banner hidden">
+                <i class="fas fa-user-shield"></i>
+                <span><strong>ADMIN MODE</strong> - You have full system access</span>
+            </div>
 
             <!-- Alarm Banner -->
             <div id="alarmBanner" class="alarm-banner hidden">
@@ -327,6 +341,50 @@
                     </div>
                 </div>
 
+                <!-- THD Section -->
+                <div class="thd-section">
+                    <h2><i class="fas fa-wave-square"></i> Total Harmonic Distortion (THD)</h2>
+                    <div class="thd-grid">
+                        <!-- Voltage THD -->
+                        <div class="thd-card">
+                            <h3 class="thd-title voltage-thd">Voltage THD (%)</h3>
+                            <div class="thd-params">
+                                <div class="param">
+                                    <label>THD Ua:</label>
+                                    <span id="thdUa">0.00 %</span>
+                                </div>
+                                <div class="param">
+                                    <label>THD Ub:</label>
+                                    <span id="thdUb">0.00 %</span>
+                                </div>
+                                <div class="param">
+                                    <label>THD Uc:</label>
+                                    <span id="thdUc">0.00 %</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current THD -->
+                        <div class="thd-card">
+                            <h3 class="thd-title current-thd">Current THD (%)</h3>
+                            <div class="thd-params">
+                                <div class="param">
+                                    <label>THD Ia:</label>
+                                    <span id="thdIa">0.00 %</span>
+                                </div>
+                                <div class="param">
+                                    <label>THD Ib:</label>
+                                    <span id="thdIb">0.00 %</span>
+                                </div>
+                                <div class="param">
+                                    <label>THD Ic:</label>
+                                    <span id="thdIc">0.00 %</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Charts Section -->
                 <div class="charts-section">
                     <h2><i class="fas fa-chart-line"></i> Real-time Charts</h2>
@@ -376,7 +434,44 @@
             </div>
         </div>
 
-      <!-- Settings Page -->
+        <!-- Admin Page -->
+        <div id="admin" class="page">
+            <header class="header">
+                <h1><i class="fas fa-users-cog"></i> Admin Panel</h1>
+                <div class="status-bar">
+                    <span>Manage users and view their data</span>
+                </div>
+            </header>
+
+            <div class="admin-container">
+                <!-- User Tree Section -->
+                <div class="user-tree-section">
+                    <h2><i class="fas fa-users"></i> User List</h2>
+                    <div class="user-tree" id="userTree">
+                        <!-- Users will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Selected User Data -->
+                <div class="user-data-section">
+                    <h2><i class="fas fa-user-circle"></i> User Data</h2>
+                    <div class="selected-user-info" id="selectedUserInfo">
+                        <p>Select a user to view their data</p>
+                    </div>
+                    <div class="user-devices" id="userDevices">
+                        <!-- User devices will be shown here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="admin-actions">
+                <button class="btn btn-success" onclick="showPage('dashboard')">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
         <div id="settings" class="page">
             <header class="header">
                 <h1><i class="fas fa-cog"></i> Alarm Settings</h1>

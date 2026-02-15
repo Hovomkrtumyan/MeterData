@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Power Monitoring System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header i {
+            font-size: 3rem;
+            color: #f39c12;
+            margin-bottom: 15px;
+        }
+
+        .login-header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .register-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .register-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+        }
+
+        .register-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .toggle-form {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .toggle-form a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .toggle-form a:hover {
+            text-decoration: underline;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .error-message {
+            background: #e74c3c;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .error-message.show {
+            display: flex;
+        }
+
+        .success-message {
+            background: #2ecc71;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .success-message.show {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="fas fa-bolt"></i>
+                <h1>Power Monitor</h1>
+                <p id="formSubtitle">Please login to access the dashboard</p>
+            </div>
+
+            <div id="errorMessage" class="error-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="errorText"></span>
+            </div>
+
+            <div id="successMessage" class="success-message">
+                <i class="fas fa-check-circle"></i>
+                <span id="successText"></span>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginUsername">
+                        <i class="fas fa-user"></i> Username
+                    </label>
+                    <input type="text" id="loginUsername" name="username" required autocomplete="username" placeholder="Enter your username">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="loginPassword" name="password" required autocomplete="current-password" placeholder="Enter your password">
+                </div>
+
+                <button type="submit" class="login-btn" id="loginBtn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+
+            <form id="registerForm" class="hidden">
+                <div class="form-group">
+                    <label for="regUsername">
+                        <i class="fas fa-user"></i> Username
+                    </label>
+                    <input type="text" id="regUsername" name="username" required autocomplete="username" placeholder="Choose a username">
+                </div>
+
+                <div class="form-group">
+                    <label for="regPassword">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="regPassword" name="password" required autocomplete="new-password" placeholder="Choose a password (min 6 chars)">
+                </div>
+
+                <div class="form-group">
+                    <label for="regConfirmPassword">
+                        <i class="fas fa-lock"></i> Confirm Password
+                    </label>
+                    <input type="password" id="regConfirmPassword" name="confirmPassword" required autocomplete="new-password" placeholder="Confirm your password">
+                </div>
+
+                <button type="submit" class="register-btn" id="registerBtn">
+                    <i class="fas fa-user-plus"></i> Register
+                </button>
+            </form>
+
+            <div class="toggle-form">
+                <p id="toggleText">Don't have an account? <a onclick="toggleForm()">Register here</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const baseUrl = window.location.origin;
+        let isLoginForm = true;
+
+        async function checkAuth() {
+            // Prevent redirect loops
+            if (sessionStorage.getItem('authCheckInProgress')) {
+                return;
+            }
+            sessionStorage.setItem('authCheckInProgress', 'true');
+            
+            try {
+                const response = await fetch(`${baseUrl}/api/auth/status`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                if (data.authenticated) {
+                    window.location.href = '/';
+                } else {
+                    // Clear flag if not authenticated (stay on login page)
+                    sessionStorage.removeItem('authCheckInProgress');
+                }
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                sessionStorage.removeItem('authCheckInProgress');
+            }
+        }
+
+        checkAuth();
+
+        function toggleForm() {
+            isLoginForm = !isLoginForm;
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            const subtitle = document.getElementById('formSubtitle');
+            const toggleText = document.getElementById('toggleText');
+
+            hideMessages();
+
+            if (isLoginForm) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                subtitle.textContent = 'Please login to access the dashboard';
+                toggleText.innerHTML = 'Don\'t have an account? <a onclick="toggleForm()">Register here</a>';
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                subtitle.textContent = 'Create a new account';
+                toggleText.innerHTML = 'Already have an account? <a onclick="toggleForm()">Login here</a>';
+            }
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            hideMessages();
+            
+            if (!username || !password) {
+                showError('Please enter both username and password');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+
+            try {
+                const response = await fetch(`${baseUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('Login successful! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    showError(data.error || 'Login failed');
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Network error. Please try again.');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            }
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const registerBtn = document.getElementById('registerBtn');
+            
+            hideMessages();
+            
+            if (!username || !password) {
+                showError('Please enter username and password');
+                return;
+            }
+
+            if (password.length < 6) {
+                showError('Password must be at least 6 characters');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registering...';
+
+            try {
+                const response = await fetch(`${baseUrl}/api/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showSuccess('Registration successful! You can now login.');
+                    setTimeout(() => {
+                        toggleForm();
+                        document.getElementById('loginUsername').value = username;
+                        document.getElementById('loginPassword').value = '';
+                        document.getElementById('loginPassword').focus();
+                    }, 1500);
+                } else {
+                    showError(data.error || 'Registration failed');
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Network error. Please try again.');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Register';
+            }
+        });
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            document.getElementById('errorText').textContent = message;
+            errorDiv.classList.add('show');
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            document.getElementById('successText').textContent = message;
+            successDiv.classList.add('show');
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+    </script>
+</body>
+</html>
